@@ -115,8 +115,8 @@ class SudokuSolver {
   };
 
   findEmpty(matrix){
-    for(i=0;i<matrix.length;i++){
-      for(j=0;j<matrix.length;j++){
+    for(let i=0;i<matrix.length;i++){
+      for(let j=0;j<matrix.length;j++){
         if(!matrix[i][j]){
           return {i,j}
         };
@@ -139,7 +139,7 @@ class SudokuSolver {
     // no empty cell / matrix complete : return true
     if(!emptyCell){return true};
     // empty cell: search for an allowed value
-    for(let n=0;n<=matrix.length;n++){
+    for(let n=1;n<=matrix.length;n++){
       const {i,j} = emptyCell;
       if(this.isAllowed(matrix,i,j,n)){
         // insert allowed number in empty cell
@@ -158,12 +158,12 @@ class SudokuSolver {
 
   stringify(matrix){
     return matrix
-      .map(row=>(row.join()))
-      .join();
+      .map(row=>(row.join('')))
+      .join('');
   };
 
   solve(puzzleString) {
-    const matrix = parse(puzzleString);
+    const matrix = this.parse(puzzleString);
     if(this.solveMatrix(matrix)){
       return this.stringify(matrix);
     };

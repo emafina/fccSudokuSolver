@@ -2,11 +2,13 @@ const { puzzlesAndSolutions } = require('./controllers/puzzle-strings.js');
 const SudokuSolver = require('./controllers/sudoku-solver.js');
 
 const string = puzzlesAndSolutions[0][0];
-console.log(string);
 const solver = new SudokuSolver();
+const matrix = solver.parse(string);
+console.table(matrix);
+
 const solution = solver.solve(string);
 if(solution){
-    console.log(solution);
+    console.table(solver.parse(solution));
 }else{
     console.log('No solution')
 };
