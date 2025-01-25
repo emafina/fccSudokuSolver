@@ -5,6 +5,49 @@ function isSquare(num){
 
 class SudokuSolver {
 
+  isLegal(string) {
+    const matrix = this.parse(string);
+    // check rows
+    for(let i=0;i<matrix.length;i++){
+      for(let ja=0;ja<matrix.length-1;ja++){
+        for(let jb=ja+1;jb<matrix.length;jb++){
+          if(matrix[i][ja]&&matrix[i][ja]==matrix[i][jb]){
+            return false;
+          };
+        };
+      };
+    };
+    // check columns
+    for(let j=0;j<matrix.length;j++){
+      for(let ia=0;ia<matrix.length-1;ia++){
+        for(let ib=ia+1;ib<matrix.length;ib++){
+          if(matrix[ia][j]&&matrix[ia][j]==matrix[ib][j]){
+            return false;
+          };
+        };
+      };
+    };
+    // check regions
+    for(let is=0;is<=6;is+=3){
+      for(let js=0;js<=6;js+=3){
+        const arr=[];
+        for(let i=is;i<is+3;i++){
+          for(let j=js;j<js+3;j++){
+            arr.push(matrix[i][j]);
+          };
+        };
+        for(let k=0;k<arr.length-1;k++){
+          for(let y=k+1;y<arr.length;y++){
+            if(arr[k]&&arr[k]==arr[y]){
+              return false;
+            };
+          };
+        };
+      };
+    };
+    return true;
+  };
+
   parse(string) {
   // converts string into matrix
     const dimString = string.length;
@@ -22,44 +65,27 @@ class SudokuSolver {
     return arr;
   };
 
-  // checkArray(arr){
-  //   let check = true;
-  //   for(let i=0;i<arr.length-1;i++){
-  //     for(let j=i+1;j<arr.length;j++){
-  //       if(arr[i]===arr[j]){check=false}
-  //     };
-  //   };
-  //   return check;
-  // };
-
-  // getRegion(matrix,i,j){
-  // // returns area in array form
-  //   const n=3;
-  //   const i0 = n*Math.trunc(i/n);
-  //   const i1 = i0+n-1;
-  //   const j0 = n*Math.trunc(j/n);
-  //   const j1 = j0+n-1;
-  //   const area = [];
-  //   for(let i=i0;i<=i1;i++){
-  //     for(let j=j0;j<=j1;j++){
-  //       area.push(matrix[i][j])
-  //     };
-  //   };
-  //   return area;
-  // };
-  
-  // getColumn(matrix,j){
-  //   const column = [];
-  //   for(let i=0;i<matrix.length;i++){
-  //     column.push(matrix[i][j]);
-  //   };
-  //   return column;
-  // };
+  parseCoord(string){
+    const regex = new RegExp('^([A-I])([1-9])$');
+    const result = regex.exec(string);
+    if(!result){return {success:false}};
+    const row = result[1].charCodeAt(0)-65;
+    const column = parseInt(result[2])-1;
+    return {row,column,success:true};
+  };
 
   // **
   validate(puzzleString) {
-    const regex = new RegExp('[1-9\\.]{81}')
-    return regex.test(puzzleString);
+    const regex = new RegExp('^[1-9\\.]{81}$');
+    const result = {
+      valid: regex.test(puzzleString)
+    };
+    if(!result.valid){
+      result.message = puzzleString.length!==81
+        ? 'Expected puzzle to be 81 characters long'
+        : 'Invalid characters in puzzle';
+    };
+    return result;
   }
 
   isAllowedRow(matrix,row,column,value){
@@ -126,11 +152,21 @@ class SudokuSolver {
   };
 
   isAllowed(matrix,row,column,value){
-    return (
-      this.isAllowedRow(matrix,row,column,value) &&
-      this.isAllowedColumn(matrix,row,column,value) &&
-      this.isAllowedRegion(matrix,row,column,value)
-    );
+    let valid = true;
+    let conflict = [];
+    if(!this.isAllowedRow(matrix,row,column,value)){
+      valid = false;
+      conflict.push('row');
+    };
+    if(!this.isAllowedColumn(matrix,row,column,value)){
+      valid = false;
+      conflict.push('column');
+    };
+    if(!this.isAllowedRegion(matrix,row,column,value)){
+      valid = false;
+      conflict.push('region');
+    };
+    return valid?{valid}:{valid,conflict};
   };
 
   solveMatrix(matrix){
@@ -141,7 +177,7 @@ class SudokuSolver {
     // empty cell: search for an allowed value
     for(let n=1;n<=matrix.length;n++){
       const {i,j} = emptyCell;
-      if(this.isAllowed(matrix,i,j,n)){
+      if(this.isAllowed(matrix,i,j,n).valid){
         // insert allowed number in empty cell
         matrix[i][j]=n;
         // try to solve
@@ -154,7 +190,7 @@ class SudokuSolver {
       };
     };
     return false;
-  }
+  };
 
   stringify(matrix){
     return matrix
@@ -163,10 +199,15 @@ class SudokuSolver {
   };
 
   solve(puzzleString) {
+    // validate string
+    if(!this.validate(puzzleString).valid||!this.isLegal(puzzleString)){return null};
+    // parse string
     const matrix = this.parse(puzzleString);
+    // solve matrix / stringify / return
     if(this.solveMatrix(matrix)){
       return this.stringify(matrix);
     };
+    // no solution: return null
     return null;
   };
 
