@@ -28,7 +28,7 @@ module.exports = function (app) {
         res.json({error: message});
       };
       // check value
-      if(parseInt(value)<1||parseInt(value)>9){
+      if(isNaN(value)||parseInt(value)<1||parseInt(value)>9){
         res.json({error: 'Invalid value'});
       };
       // check placement
